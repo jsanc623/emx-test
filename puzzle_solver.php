@@ -39,14 +39,24 @@ class PuzzleSolver {
         array_shift($clean); # Remove Pleasesolvethispuzzle:
         $header = ' ' . array_shift($clean) . PHP_EOL; # Capture and remove ABCD... header for output
 
+        // define our characters
         $acceptable_chars = [
             '-' => ['char' => '-', 'opp' => '>'],
             '=' => ['char' => '=', 'opp' => '='],
             '<' => ['char' => '<', 'opp' => '>'],
             '>' => ['char' => '>', 'opp' => '<'],
+
+            'divider' => ['char' => '=', 'opp' => '='],
             'default' => ['char' => '<', 'opp' => '>'],
             'empty' => ['char' => '-', 'opp' => NULL],
         ];
+
+        // shorts for readability further down
+        $empty_char = $acceptable_chars['empty']['char'];
+        $default_char = $acceptable_chars['default']['char'];
+        $default_char_opp = $acceptable_chars['default']['opp'];
+        $divider_char = $acceptable_chars['divider']['char'];
+
 
         // Set up our board
         $board = [];
@@ -68,7 +78,7 @@ class PuzzleSolver {
                 // the x position of '=' increases by 1 every time y increases by 1,
                 // creating a diagonal which acts as our mirror line
                 if($x == $x_equal_location){
-                    $board[$y][$x] = '=';
+                    $board[$y][$x] = $acceptable_chars['divider']['char'];
                 }
 
                 // we don't care about explicitly checking the lower mirror
@@ -80,15 +90,27 @@ class PuzzleSolver {
                 $mirror_x = $x;
                 $mirror_y = $y;
 
-                // if both normal and mirror are empty, set normal to '>' and mirror to '<'
-                // But first, check if we have a nearby cell to the left with a value
-                if($board[$y][$x] == '-' && $board[$mirror_x][$mirror_y] == '-'){
-                    $board[$y][$x] = $acceptable_chars['default']['char'];
-                    $board[$mirror_x][$mirror_y] = $acceptable_chars['default']['opp'];
-                } else if ($board[$y][$x] == '-' && $board[$mirror_x][$mirror_y] != '-'){
+                // if both normal and mirror are empty
+                if($board[$y][$x] == $empty_char && $board[$mirror_x][$mirror_y] == $empty_char){
+                    $tmp_left_x = $x - 1;
+
+                    // check past the divider
+                    if($x_equal_location < $x) {
+                        $tmp_left_x--;
+                    }
+                    // Check if we have a cell to the left with a value and emulate it
+                    if($board[$y][$tmp_left_x] != $empty_char){
+                        $board[$y][$x] = $board[$y][$tmp_left_x];
+                        $board[$mirror_x][$mirror_y] = $acceptable_chars[$board[$y][$tmp_left_x]]['opp'];
+                    } else {
+                        // otherwise set normal to default char and default opposite
+                        $board[$y][$x] = $default_char;
+                        $board[$mirror_x][$mirror_y] = $default_char_opp;
+                    }
+                } else if ($board[$y][$x] == $empty_char && $board[$mirror_x][$mirror_y] != $empty_char){
                     // if normal is empty, but mirrored is not, set normal to opposite of mirrored
                     $board[$y][$x] = $acceptable_chars[$board[$mirror_x][$mirror_y]]['opp'];
-                } else if ($board[$y][$x] != '-' && $board[$mirror_x][$mirror_y] == '-'){
+                } else if ($board[$y][$x] != $empty_char && $board[$mirror_x][$mirror_y] == $empty_char){
                     // if normal is not empty, but mirrored is, set mirrored to opposite of normal
                     $board[$mirror_x][$mirror_y] = $acceptable_chars[$board[$y][$x]]['opp'];
                 }

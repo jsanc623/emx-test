@@ -5,7 +5,10 @@ require(__DIR__ . '/puzzle_solver.php');
 $helper = new Helper();
 $solver = new PuzzleSolver();
 
+// Log the raw request
 $helper->log($_GET);
+
+// Log each part of the request
 foreach($_REQUEST as $key => $value) {
     $helper->log($key, $value);
 }
